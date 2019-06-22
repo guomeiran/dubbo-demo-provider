@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds" debug="true">
+
+    <!-- 定义日志的根目录 log.dir是omad传入的启动参数  -->
+    <property name="log.base" value="${log.dir:-../logs}" />
+    <property name="log.proj" value="dubbo-provider" />
+    <property name="logPattern" value="%d - dubbo-demo-provider - %c - %p [%t] %X{logTraceId} [%C{0}:%M] - %m%n"></property>
+
+    <appender name="stdoutAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${logPattern}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="asyncStdoutAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="stdoutAppender" />
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- error log -->
+    <appender name="errorAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${log.base}/trace/${log.proj}-error.log</File>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${log.base}/${log.proj}-error.log.%d{yyyy-MM-dd}-%i</FileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>200MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${logPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="asyncErrorAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="errorAppender" />
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- common log -->
+    <appender name="commonAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${log.base}/trace/${log.proj}.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${log.base}/${log.proj}.log.%d{yyyy-MM-dd}-%i</FileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>200MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${logPattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="asyncCommonAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="commonAppender" />
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <logger name="common" level="info" additivity="false" >
+        <appender-ref ref="asyncCommonAppender" />
+    </logger>
+
+    <!-- 一些特定的业务模块日志，如支付日志，操作日志等，需要指定特定的logger的name，同步异步可选 -->
+    <logger name="operationLog" level="info" additivity="false" >
+        <appender-ref ref="commonAppender" />
+    </logger>
+
+
+    <root>
+        <level value="INFO" />
+        <appender-ref ref="asyncStdoutAppender" />
+        <appender-ref ref="asyncErrorAppender" />
+    </root>
+
+    <logger name="error" level="ERROR" additivity="false">
+        <appender-ref ref="asyncErrorAppender"/>
+    </logger>
+</configuration>
